@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大屏显示</title>
+  <style>
+    #patterns {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .pattern {
+      width: 50px;
+      height: 50px;
+      margin: 5px;
+      background-color: black;
+    }
+  </style>
+</head>
+<body>
+  <div id="patterns"></div>
+  
+  <!-- 引入 Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDyM2JVljIWSLmBBtz1uHUFIlc41D_F9os",
+      authDomain: "my-interaction-7f657.firebaseapp.com",
+      projectId: "my-interaction-7f657",
+      storageBucket: "my-interaction-7f657.firebasestorage.app",
+      messagingSenderId: "1026631020219",
+      appId: "1:1026631020219:web:a6153c6adc3eb28736439e",
+      measurementId: "G-PS56LRLTG4"
+    };
+
+    // 初始化 Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(app);
+
+    // 实时监听“patterns”集合的变化
+    db.collection("patterns").orderBy("timestamp").onSnapshot(snapshot => {
+      const patternsDiv = document.getElementById("patterns");
+      patternsDiv.innerHTML = "";  // 清空当前显示
+
+      snapshot.forEach(doc => {
+        const pattern = doc.data().pattern;
+        const patternDiv = document.createElement("div");
+        patternDiv.classList.add("pattern");
+
+        // 根据图案数据绘制“口”字
+        pattern.forEach((row, rowIndex) => {
+          row.forEach((pixel, colIndex) => {
+            if (pixel === 1) {
+              const pixelDiv = document.createElement("div");
+              pixelDiv.style.width = "10px";
+              pixelDiv.style.height = "10px";
+              pixelDiv.style.backgroundColor = "black";
+              patternDiv.appendChild(pixelDiv);
+            }
+          });
+        });
+
+        patternsDiv.appendChild(patternDiv);  // 将图案显示到页面上
+      });
+    });
+  </script>
+</body>
+</html>
