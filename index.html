@@ -1,80 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Display Web</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
-    <script>
-      // Firebase 配置
-      const firebaseConfig = {
-        apiKey: "AIzaSyDyM2JVljIWSLmBBtz1uHUFIlc41D_F9os",
-        authDomain: "my-interaction-7f657.firebaseapp.com",
-        projectId: "my-interaction-7f657",
-        storageBucket: "my-interaction-7f657.firebasestorage.app",
-        messagingSenderId: "1026631020219",
-        appId: "1:1026631020219:web:a6153c6adc3eb28736439e",
-        measurementId: "G-PS56LRLTG4"
-      };
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大屏显示</title>
+  <style>
+    #patterns {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center; /* 使图案居中显示 */
+    }
+    .pattern {
+      display: grid; /* 使用 grid 布局 */
+      grid-template-columns: repeat(13, 10px); /* 每行 13 列，确保 13 个像素列 */
+      grid-gap: 1px; /* 像素之间的间隙 */
+      margin: 5px;
+    }
+    .pixel {
+      width: 10px;
+      height: 10px;
+      background-color: black;
+    }
+  </style>
+</head>
+<body>
+  <div id="patterns"></div>
+  
+  <!-- 引入 Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDyM2JVljIWSLmBBtz1uHUFIlc41D_F9os",
+      authDomain: "my-interaction-7f657.firebaseapp.com",
+      projectId: "my-interaction-7f657",
+      storageBucket: "my-interaction-7f657.firebasestorage.app",
+      messagingSenderId: "1026631020219",
+      appId: "1:1026631020219:web:a6153c6adc3eb28736439e",
+      measurementId: "G-PS56LRLTG4"
+    };
 
-      // 初始化 Firebase
-      const app = firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore(app);  // 获取 Firestore 实例
+    // 初始化 Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(app);
 
-      // 获取并显示“口”字图案
-      function fetchPatterns() {
-        const patternsRef = db.collection("patterns"); // 获取 patterns 集合
+    // 实时监听“patterns”集合的变化
+    db.collection("patterns").orderBy("timestamp").onSnapshot(snapshot => {
+      const patternsDiv = document.getElementById("patterns");
+      patternsDiv.innerHTML = "";  // 清空当前显示
 
-        patternsRef.orderBy("timestamp", "desc").limit(10).get() // 获取最近的 10 个图案
-          .then((querySnapshot) => {
-            querySnapshot.forEach((doc) => {
-              const data = doc.data();
-              displayPattern(data.pattern);  // 显示图案
-            });
-          })
-          .catch((error) => {
-            console.error("Error getting documents: ", error);
-          });
-      }
+      snapshot.forEach(doc => {
+        const pattern = doc.data().pattern;
+        const patternDiv = document.createElement("div");
+        patternDiv.classList.add("pattern");
 
-      // 绘制图案
-      function displayPattern(pattern) {
-        const container = document.getElementById("patterns-container");
-        
-        const div = document.createElement("div");
-        div.classList.add("pattern");
-        
-        const canvas = document.createElement("canvas");
-        div.appendChild(canvas);
-        container.appendChild(div);
-        
-        const ctx = canvas.getContext("2d");
-        const pixelSize = 20;
-
-        // 设置 canvas 大小
-        canvas.width = pixelSize * pattern[0].length;
-        canvas.height = pixelSize * pattern.length;
-
-        // 绘制图案
-        for (let row = 0; row < pattern.length; row++) {
-          for (let col = 0; col < pattern[row].length; col++) {
-            if (pattern[row][col] === 1) {
-              ctx.fillStyle = "black";
-              ctx.fillRect(col * pixelSize, row * pixelSize, pixelSize, pixelSize);
+        // 根据图案数据绘制“口”字
+        pattern.forEach((row, rowIndex) => {
+          row.forEach((pixel, colIndex) => {
+            if (pixel === 1) {
+              const pixelDiv = document.createElement("div");
+              pixelDiv.classList.add("pixel");  // 给每个像素添加类名
+              patternDiv.appendChild(pixelDiv);
+            } else {
+              // 可选：如果 pixel === 0，创建一个透明的 div
+              const pixelDiv = document.createElement("div");
+              pixelDiv.classList.add("empty");  // 可选的空白像素
+              patternDiv.appendChild(pixelDiv);
             }
-          }
-        }
-      }
+          });
+        });
 
-      // 调用函数，显示图案
-      window.onload = fetchPatterns; // 页面加载时自动获取并显示图案
-    </script>
-  </head>
-  <body>
-    <h1>Display Web - "口" 字图案</h1>
-    <div id="patterns-container">
-      <!-- 在这里显示图案 -->
-    </div>
-  </body>
+        patternsDiv.appendChild(patternDiv);  // 将图案显示到页面上
+      });
+    });
+  </script>
+</body>
 </html>
